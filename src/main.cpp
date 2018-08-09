@@ -317,7 +317,7 @@ public:
     Engine(World&& world) : world(world) {
     }
 
-    void run(Zoo& zoo, int pos) {
+    void run(Zoo& zoo, ZooPosition pos) {
         if ((zoo.flags & GEN_FOTO) != 0) zoo.power += 3;
         if ((zoo.flags & GEN_BISEXUAL) != 0) zoo.power--;
         if (((zoo.flags & GEN_MOVE) != 0) && zoo.power >= 5) {
@@ -325,35 +325,35 @@ public:
                 int find_parametr = 0;
                 if ((zoo.status & STATUS_MALE) != 0) find_parametr |= STATUS_FEMALE;
                 if ((zoo.status & STATUS_FEMALE) != 0) find_parametr |= STATUS_MALE;
-                Zoo* i = world.getUp(pos);
-                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos, pos - world.map_size);
-                i = world.getDown(pos);
-                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos, pos + world.map_size);
-                i = world.getLeft(pos);
-                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos, pos - 1);
-                i = world.getRight(pos);
-                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos, pos + 1);
+                Zoo* i = pos.up;
+                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos.pos, pos.pos - world.map_size);
+                i = pos.down;
+                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos.pos, pos.pos + world.map_size);
+                i = pos.left;
+                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos.pos, pos.pos - 1);
+                i = pos.right;
+                if (i != nullptr && (i->status & find_parametr) != 0) world.newZoo(zoo, *i, pos.pos, pos.pos + 1);
             }
-            if (!world.isAllowUp(pos) && !world.isAllowDown(pos) && !world.isAllowLeft(pos) && !world.isAllowRight(pos)) return;
+            if (!pos.isAllowUp && !pos.isAllowDown && !pos.isAllowLeft && !pos.isAllowRight) return;
             int ran = rnd.rand4();
             switch (ran) {
-                case 0: if (world.isAllowUp(pos)) {
-                        world.MoveTo(world.map[pos], world.map[pos - world.map_size]);
+                case 0: if (pos.isAllowUp) {
+                        world.MoveTo(world.map[pos.pos], world.map[pos.pos - world.map_size]);
                         zoo.power -= 2;
                         return;
                     }
-                case 1: if (world.isAllowRight(pos)) {
-                        world.MoveTo(world.map[pos], world.map[pos + 1]);
+                case 1: if (pos.isAllowRight) {
+                        world.MoveTo(world.map[pos.pos], world.map[pos.pos + 1]);
                         zoo.power -= 2;
                         return;
                     }
-                case 2: if (world.isAllowDown(pos)) {
-                        world.MoveTo(world.map[pos], world.map[pos + world.map_size]);
+                case 2: if (pos.isAllowDown) {
+                        world.MoveTo(world.map[pos.pos], world.map[pos.pos + world.map_size]);
                         zoo.power -= 2;
                         return;
                     }
-                case 3: if (world.isAllowLeft(pos)) {
-                        world.MoveTo(world.map[pos], world.map[pos - 1]);
+                case 3: if (pos.isAllowLeft) {
+                        world.MoveTo(world.map[pos.pos], world.map[pos.pos - 1]);
                         zoo.power -= 2;
                         return;
                     }
@@ -371,30 +371,34 @@ public:
     void cycle() {
         ZooPosition pos;
         for (int i = 0; i < world.map_maxpos; ++i) {
+            pos.pos = i;
             if ((world.map[i].gstatus & GSTATUS_ENABLE) != 0) {
-                if (pos + world.map_size < world.map_maxpos) {
-                    pos.down = world.map[pos + world.map_size];
+                if (i + world.map_size < world.map_maxpos) {
+                    pos.down = &world.map[i + world.map_size];
                     if (pos.down->isEmpty()) pos.isAllowDown = true;
                     else pos.isAllowDown = false;
-                } else pos.isAllowDown = false;
-                if (pos - world.map_size < world.map_maxpos) {
-                    pos.up = world.map[pos - world.map_size];
-                    if (pos.down->isEmpty()) pos.isAllowUp = true;
+                } else {pos.isAllowDown = false; pos.down = nullptr; }
+                
+                if (i - world.map_size > 0) {
+                    pos.up = &world.map[i - world.map_size];
+                    if (pos.up->isEmpty()) pos.isAllowUp = true;
                     else pos.isAllowUp = false;
-                } else pos.isAllowUp = false;
-                if (pos - 1 < world.map_maxpos) {
-                    pos.up = world.map[pos - world.map_size];
-                    if (pos.down->isEmpty()) pos.isAllowLeft = true;
+                } else {pos.isAllowUp = false; pos.up = nullptr; }
+                
+                if (i - 1 > 0) {
+                    pos.left = &world.map[i - 1];
+                    if (pos.left->isEmpty()) pos.isAllowLeft = true;
                     else pos.isAllowLeft = false;
-                } else pos.isAllowLeft = false;
-                if (pos + 1 < world.map_maxpos) {
-                    pos.up = world.map[pos - world.map_size];
-                    if (pos.down->isEmpty()) pos.isAllowLeft = true;
-                    else pos.isAllowLeft = false;
-                } else pos.isAllowLeft = false;
-                run(world.map[i], i);
+                } else {pos.isAllowLeft = false; pos.left = nullptr; }
+                
+                if (i + 1 < world.map_maxpos) {
+                    pos.right = &world.map[i + 1];
+                    if (pos.right->isEmpty()) pos.isAllowRight = true;
+                    else pos.isAllowRight = false;
+                } else {pos.isAllowRight = false; pos.right = nullptr; }
+                
+                run(world.map[i], pos);
             }
-            pos.pos++;
         }
     }
 };
