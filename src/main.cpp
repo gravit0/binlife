@@ -3,14 +3,11 @@
 #include <memory>
 #include <cstring>
 #include <unistd.h>
-#include <boost/random.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <ctime>
 
 #include "stats.h"
-boost::mt19937_64 rng(time(NULL));
-boost::uniform_int<> six(1, 16);
-boost::variate_generator<boost::mt19937_64, boost::uniform_int<> > die(rng, six);
+#include "random.h"
 //Биты
 #define GSTATUS_ENABLE 1 << 0
 #define GSTATUS_DEAD 1 << 1
@@ -28,86 +25,6 @@ boost::variate_generator<boost::mt19937_64, boost::uniform_int<> > die(rng, six)
 
 unsigned long long int RandomNumbers = 0;
 zoo_stats stats;
-class Random {
-    unsigned long long int pool;
-    unsigned char pos;
-public:
-
-    Random() {
-        RandomNumbers++;
-        pool = rng();
-        pos = 0;
-    }
-
-    unsigned long long int rand64() {
-        RandomNumbers++;
-        return rng();
-    }
-
-    inline char rand2() {
-        if (pos >= 63) {
-            pool = rng();
-            pos = 0;
-            RandomNumbers++;
-        }
-        int ret = ((pool & (1 << pos)) == 0) ? 0 : 1;
-        pos++;
-        return ret;
-    }
-
-    inline unsigned char rand8() {
-        if (pos >= (63 - 8)) {
-            pool = rng();
-            pos = 0;
-            RandomNumbers++;
-        }
-        int ret = (pool >> pos) & 255;
-        pos += 8;
-        return ret;
-    }
-
-    inline char rand6() {
-        if (pos >= (63 - 6)) {
-            pool = rng();
-            pos = 0;
-            RandomNumbers++;
-        }
-        int ret = (pool >> pos) & 63;
-        pos++;
-        return ret;
-    }
-
-    inline unsigned short rand16() {
-        if (pos >= (63 - 16)) {
-            pool = rng();
-            pos = 0;
-            RandomNumbers++;
-        }
-        int ret = (pool >> pos) & 65535;
-        pos++;
-        return ret;
-    }
-
-    char rand4() {
-        int a = rand2();
-        a |= (rand2() << 1);
-        return a;
-    }
-
-    void printMap() {
-        int a[64];
-        for (int i = 0; i < 2000; ++i) {
-            pool = rng();
-            for (int i = 0; i < 64; ++i) {
-                int r = (pool & (1 << i));
-                a[i] += (r == 0) ? 1 : -1;
-            }
-        }
-        for (int i = 0; i < 64; ++i) {
-            std::cout << i << ": " << ((float) a[i] / (float) 2000.0) * 100 << std::endl;
-        }
-    }
-};
 Random rnd;
 
 struct Zoo {
