@@ -8,6 +8,7 @@
 
 #include "stats.h"
 #include "random.h"
+#include "zoo.h"
 //Биты
 #define GSTATUS_ENABLE 1 << 0
 #define GSTATUS_DEAD 1 << 1
@@ -22,28 +23,13 @@
 #define GEN_FINDPARTNER 1 << 2
 #define GEN_MOREAGE 1 << 3
 #define GEN_BISEXUAL 1 << 4
-
-unsigned long long int RandomNumbers = 0;
-zoo_stats stats;
-Random rnd;
-
-struct Zoo {
-    long long int flags; //Полезный геном
-    long long int flags2; //Мусорный геном
-    int status; // Состояние (геном)
-    int gstatus; //Глобальный статус
-    short power;
-    short age;
-    short timer;
-    int dead_chance;
-
-    bool isEmpty() {
+bool Zoo::isEmpty() {
         if ((gstatus & GSTATUS_ENABLE) != 0) return false;
         if ((gstatus & GSTATUS_BARRIER) != 0) return false;
         return true;
     }
-
-};
+zoo_stats stats;
+Random rnd;
 class Engine;
 
 class World {
@@ -213,18 +199,6 @@ public:
     }
 };
 
-struct ZooPosition {
-    int pos = 0; //Смещение
-    Zoo* up = nullptr;
-    Zoo* down = nullptr;
-    Zoo* left = nullptr;
-    Zoo* right = nullptr;
-    bool isAllowUp = false;
-    bool isAllowDown = false;
-    bool isAllowLeft = false;
-    bool isAllowRight = false;
-};
-
 class Engine {
 public:
     World world;
@@ -347,7 +321,6 @@ int main() {
     std::cout << "OK" << std::endl;
     std::cout << "Perforance:" << (ptime2 - ptime) << std::endl;
     std::cout << "Table memory:" << TABLE_SIZE * TABLE_SIZE * sizeof (Zoo) << std::endl;
-    std::cout << "Random:" << RandomNumbers << std::endl;
     stats.print();
     std::cout << "Deviation of chance:" << ((float) stats.balance / (float) stats.created) * 100 << "%" << std::endl;
 }
