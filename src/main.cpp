@@ -6,6 +6,8 @@
 #include <boost/random.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <ctime>
+
+#include "stats.h"
 boost::mt19937_64 rng(time(NULL));
 boost::uniform_int<> six(1, 16);
 boost::variate_generator<boost::mt19937_64, boost::uniform_int<> > die(rng, six);
@@ -24,12 +26,8 @@ boost::variate_generator<boost::mt19937_64, boost::uniform_int<> > die(rng, six)
 #define GEN_MOREAGE 1 << 3
 #define GEN_BISEXUAL 1 << 4
 
-int ZooBalance = 0;
-int ZooCreated = 0;
-int ZooMutBISEXUAL = 0;
-int ZooDeadByGenome = 0;
 unsigned long long int RandomNumbers = 0;
-
+zoo_stats stats;
 class Random {
     unsigned long long int pool;
     unsigned char pos;
@@ -228,23 +226,23 @@ public:
         ran64 = rnd.rand64();
         z.flags2 = (ran64 & parent1.flags2) | ((~ran64) & parent2.flags2);
         z.power = 1;
-        parent1.power = 0;
-        parent2.power = 0;
+        parent1.power -= 30;
+        parent2.power -= 30;
         z.age = 0;
         z.timer = 0;
         z.gstatus = GSTATUS_ENABLE;
         z.dead_chance = 0;
         if ((z.status & STATUS_FEMALE) != 0 && (z.status & STATUS_MALE) != 0) {
-        } else if ((z.status & STATUS_FEMALE) != 0) ZooBalance++;
-        else if ((z.status & STATUS_MALE) != 0) ZooBalance--;
-        ZooCreated++;
+        } else if ((z.status & STATUS_FEMALE) != 0) stats.balance++;
+        else if ((z.status & STATUS_MALE) != 0) stats.balance--;
+        stats.created++;
         //Мутируем (полезный геном)
         if (rnd.rand8() == 0) {
             int fpos = rnd.rand6();
             z.flags = z.flags ^ (1 << fpos);
             if ((z.flags & GEN_BISEXUAL) != 0) {
                 z.status |= (STATUS_MALE | STATUS_FEMALE);
-                ZooMutBISEXUAL++;
+                stats.mut.bisexual++;
             }
         }
         //Мутируем (бесполезный геном)
@@ -253,7 +251,7 @@ public:
             z.flags2 = z.flags2 ^ (1 << fpos);
             if ((z.flags2 & 0x1444000000200004) > 0x100000) {
                 z.gstatus = GSTATUS_DEAD;
-                ZooDeadByGenome++;
+                stats.dead.genome++;
             }
         }
         if (isAllowUp(pos1)) {
@@ -362,9 +360,11 @@ public:
         zoo.age++;
         if (zoo.power < 0) {
             zoo.gstatus = GSTATUS_DEAD;
+            stats.dead.no_eat++;
         }
         if (zoo.age > 100 && (zoo.flags & GEN_MOREAGE) == 0) {
             zoo.gstatus = GSTATUS_DEAD;
+            stats.dead.more_age++;
         }
     }
 
@@ -417,7 +417,7 @@ int main() {
     world.printMap();
     std::cout << "Test cycles ";
     auto ptime = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 4000; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         engine.cycle();
         if ((i % 100) == 0) std::cerr << i << std::endl;
     }
@@ -431,9 +431,6 @@ int main() {
     std::cout << "Perforance:" << (ptime2 - ptime) << std::endl;
     std::cout << "Table memory:" << TABLE_SIZE * TABLE_SIZE * sizeof (Zoo) << std::endl;
     std::cout << "Random:" << RandomNumbers << std::endl;
-    std::cout << "ZooBalance:" << ZooBalance << std::endl;
-    std::cout << "ZooCreated:" << ZooCreated << std::endl;
-    std::cout << "Zoo Mutation BISEXUAL:" << ZooMutBISEXUAL << std::endl;
-    std::cout << "ZooDeadByGenome:" << ZooDeadByGenome << std::endl;
-    std::cout << "Deviation of chance:" << ((float) ZooBalance / (float) ZooCreated) * 100 << "%" << std::endl;
+    stats.print();
+    std::cout << "Deviation of chance:" << ((float) stats.balance / (float) stats.created) * 100 << "%" << std::endl;
 }
