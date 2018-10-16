@@ -308,7 +308,7 @@ int main() {
     world.printMap();
     std::cout << "Test cycles ";
     auto ptime = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 4000; ++i) {
         engine.cycle();
         if ((i % 100) == 0) std::cerr << i << std::endl;
     }
