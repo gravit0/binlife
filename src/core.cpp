@@ -75,13 +75,23 @@ void World::tick()
     for(int i=0;i<maxPosition;++i)
     {
         if(map[i].zoo == nullptr) continue;
-        map[i].zoo->prepareTick(*this);
+        Zoo& zoo = *map[i].zoo;
+        if(zoo.status == Zoo::Status::DEAD) continue;
+        zoo.prepareTick(*this);
     }
     for(int i=0;i<maxPosition;++i)
     {
         if(map[i].zoo == nullptr) continue;
-        map[i].zoo->tick(*this);
+        Zoo& zoo = *map[i].zoo;
+        if(zoo.status == Zoo::Status::DEAD)
+        {
+            zoo.dead_score--;
+            if(zoo.dead_score<=0) zoo.remove();
+            delete map[i].zoo;
+        }
+        else zoo.tick(*this);
     }
+    ticks_old++;
 }
 bool World::put(int x, int y, Zoo* zoo)
 {
@@ -94,9 +104,20 @@ bool World::put(int x, int y, Zoo* zoo)
 }
 bool Zoo::move(Slot* slot)
 {
-    if(slot.tree == Slot::TreeType::BARRIER) return false;
-    if(slot.zoo != nullptr) return false;
+    if(slot->tree == Slot::TreeType::BARRIER) return false;
+    if(slot->zoo != nullptr) return false;
     this->slot->zoo = nullptr;
     this->slot = slot;
     this->slot->zoo = this;
+    return true;
+}
+bool Zoo::remove()
+{
+    if(slot != nullptr)
+    {
+        slot->zoo = nullptr;
+        slot = nullptr;
+        return true;
+    }
+    return false;
 }

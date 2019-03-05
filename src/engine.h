@@ -8,9 +8,22 @@ class Zoo
 {
 public:
     Slot* slot;
+    //
+    double power;
+    double dPower;
+    int dead_score = 30; //30 тиков мертвый Zoo будет гнить
+    enum class Status
+    {
+        ALIVE, //Жив
+        DEAD //Мертв, но всё еще занимает место
+    };
+    Status status;
+    //
     void prepareTick(World& world);
     void tick(World& world);
     bool move(Slot* slot);
+    //Функции Бога
+    bool remove(); // Удаляет из мира
 };
 class Slot
 {

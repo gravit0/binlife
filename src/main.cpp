@@ -27,5 +27,8 @@ int main()
     engine.newWorld(testworld);
     std::cout << "OK" << std::endl;
     testworld->printPosTable();
+    std::cout << "First 10 ticks...";
+    testworld->run(10);
+    std::cout << "OK" << std::endl;
     return 0;
 }
