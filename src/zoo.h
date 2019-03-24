@@ -8,8 +8,7 @@ struct Zoo {
     short power;
     short age;
     short timer;
-    int dead_chance;
-
+    int dead_score;
     bool isEmpty();
 
 };

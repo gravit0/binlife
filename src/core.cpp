@@ -1,5 +1,11 @@
 #include <iostream>
 #include "engine.h"
+
+Action::Action(ActionType type)
+{
+    this->type = type;
+}
+
 char Slot::getPositionChar()
 {
     char ret = 'O';

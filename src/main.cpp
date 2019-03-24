@@ -12,13 +12,49 @@
 #include "engine.h"
 zoo_stats stats;
 Engine engine;
+MemoryEntry ZooHead::findMemory(long long int mask)
+{
+    for(MemoryEntry enity : memory)
+    {
+        if((enity.mask & mask) != 0)
+        {
+            return enity;
+        }
+    }
+}
 void Zoo::prepareTick(World& world)
 {
-    
+    Slot* this_slot = slot->up;
+    if(this_slot != nullptr && this_slot->tree != Slot::TreeType::BARRIER)
+    {
+        if(this_slot->zoo != nullptr)
+        {
+            //TODO: NEXT
+        }
+        else if(head.joy > -100)
+        {
+            head.next_action = Action(Action::ActionType::UP);
+        }
+    }
 }
 void Zoo::tick(World& world)
 {
-    
+    if(head.next_action.type == Action::ActionType::UP)
+    {
+        if(move(slot->up)) return;
+    }
+    else if(head.next_action.type == Action::ActionType::DOWN)
+    {
+        if(move(slot->down)) return;
+    }
+    else if(head.next_action.type == Action::ActionType::LEFT)
+    {
+        if(move(slot->left)) return;
+    }
+    else if(head.next_action.type == Action::ActionType::RIGHT)
+    {
+        if(move(slot->right)) return;
+    }
 }
 int main()
 {

@@ -2,8 +2,42 @@
 #define ENGINE_H
 #include <string>
 #include <vector>
+#include <list>
 class Slot;
 class World;
+namespace masks
+{
+    const long long int slot = 1;
+    const long long int zoo = 2;
+};
+class MemoryEntry
+{
+public:
+    long long int mask;
+    double joy; //Положительный - радость, отрицательный - грусть
+};
+class Action
+{
+public:
+    enum class ActionType
+    {
+        UP,
+        LEFT,
+        RIGHT,
+        DOWN,
+        NONE /* Лентяй, ничего не делает */
+    };
+    ActionType type;
+    Action(ActionType type);
+};
+class ZooHead
+{
+public:
+    std::list<MemoryEntry> memory;
+    MemoryEntry findMemory(long long int mask);
+    Action next_action;
+    double joy; //Настроение
+};
 class Zoo
 {
 public:
@@ -18,6 +52,7 @@ public:
         DEAD //Мертв, но всё еще занимает место
     };
     Status status;
+    ZooHead head;
     //
     void prepareTick(World& world);
     void tick(World& world);
